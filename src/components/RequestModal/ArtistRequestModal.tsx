@@ -253,7 +253,7 @@ const ArtistRequestModal = ({
           ? intl.formatMessage(messages.alreadyrequested)
           : intl.formatMessage(globalMessages.request)
       }
-      okDisabled={!editRequest && hasExistingRequest}
+      okDisabled={isUpdating || (!editRequest && hasExistingRequest)}
       okButtonType={
         editRequest
           ? hasPermission(Permission.MANAGE_REQUESTS)
