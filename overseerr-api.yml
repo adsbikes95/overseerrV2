@@ -6647,6 +6647,122 @@ paths:
                       type: object
                   mediaInfo:
                     $ref: '#/components/schemas/MediaInfo'
+  /music/artist/{mbid}/top-tracks:
+    get:
+      summary: Get artist top tracks
+      description: Returns a list of top recordings for a specific artist from MusicBrainz.
+      tags:
+        - music
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema:
+            type: string
+            example: '5b11f4ce-a62d-471e-81fc-a69a8278c7da'
+        - in: query
+          name: limit
+          schema:
+            type: number
+            example: 12
+            default: 12
+      responses:
+        '200':
+          description: List of top tracks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: 'b1a9c0e9-d987-4042-ae91-78d6a1d5d4e3'
+  /music/artist/{mbid}/similar:
+    get:
+      summary: Get similar artists
+      description: Returns a list of similar artists based on relations and tags from MusicBrainz.
+      tags:
+        - music
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema:
+            type: string
+            example: '5b11f4ce-a62d-471e-81fc-a69a8278c7da'
+      responses:
+        '200':
+          description: List of similar artists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: '5b11f4ce-a62d-471e-81fc-a69a8278c7da'
+                        name:
+                          type: string
+                          example: 'The Rolling Stones'
+                        type:
+                          type: string
+                          nullable: true
+                        mediaInfo:
+                          $ref: '#/components/schemas/MediaInfo'
+  /music/track/{mbid}:
+    get:
+      summary: Get track details
+      description: Returns recording details from MusicBrainz.
+      tags:
+        - music
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema:
+            type: string
+            example: 'b1a9c0e9-d987-4042-ae91-78d6a1d5d4e3'
+      responses:
+        '200':
+          description: Track details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: 'b1a9c0e9-d987-4042-ae91-78d6a1d5d4e3'
+                  title:
+                    type: string
+                    example: 'Yesterday'
+                  length:
+                    type: number
+                    nullable: true
+                  disambiguation:
+                    type: string
+                    nullable: true
+                  firstReleaseDate:
+                    type: string
+                    nullable: true
+                  artistCredit:
+                    type: array
+                    items:
+                      type: object
+                  releases:
+                    type: array
+                    items:
+                      type: object
   /person/{personId}:
     get:
       summary: Get person details
