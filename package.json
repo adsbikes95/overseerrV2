@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sct/overseerr.git"
+    "url": "https://github.com/adsbikes95/overseerrV2.git"
   },
   "license": "MIT",
   "dependencies": {
@@ -263,8 +263,8 @@
           "COMMIT_TAG": "$GIT_SHA"
         },
         "imageNames": [
-          "sctx/overseerr",
-          "ghcr.io/sct/overseerr"
+          "adsbikes95/overseerrv2",
+          "ghcr.io/adsbikes95/overseerrV2"
         ],
         "platforms": [
           "linux/amd64",

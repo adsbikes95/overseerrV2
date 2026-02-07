@@ -24,7 +24,7 @@ jobs:
 
             - [Discord](https://discord.gg/overseerr)
 
-            - [GitHub Discussions](https://github.com/sct/overseerr/discussions)
+            - [GitHub Discussions](https://github.com/adsbikes95/overseerrV2/discussions)
           close-issue: true
           lock-issue: true
           issue-lock-reason: 'off-topic'

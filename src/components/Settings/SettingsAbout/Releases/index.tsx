@@ -28,7 +28,7 @@ const messages = defineMessages({
 });
 
 const REPO_RELEASE_API =
-  'https://api.github.com/repos/sct/overseerr/releases?per_page=20';
+  'https://api.github.com/repos/adsbikes95/overseerrV2/releases?per_page=20';
 
 interface GitHubRelease {
   url: string;

@@ -64,10 +64,10 @@ jobs:
           build-args: |
             COMMIT_TAG=${{ github.sha }}
           tags: |
-            sctx/overseerr:develop
-            sctx/overseerr:${{ github.sha }}
-            ghcr.io/sct/overseerr:develop
-            ghcr.io/sct/overseerr:${{ github.sha }}
+            adsbikes95/overseerrv2:develop
+            adsbikes95/overseerrv2:${{ github.sha }}
+            ghcr.io/adsbikes95/overseerrV2:develop
+            ghcr.io/adsbikes95/overseerrV2:${{ github.sha }}
 
   discord:
     name: Send Discord Notification

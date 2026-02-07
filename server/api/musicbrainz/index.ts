@@ -165,7 +165,7 @@ class MusicBrainzAPI extends ExternalAPI {
       {},
       {
         headers: {
-          'User-Agent': 'Overseerr/1.0 (https://github.com/sct/overseerr)',
+          'User-Agent': 'OverseerrV2/1.0 (https://github.com/adsbikes95/overseerrV2)',
           Accept: 'application/json',
         },
         rateLimit: {

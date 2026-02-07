@@ -61,7 +61,7 @@ const fetchWikidataImageUrl = async (qid: string) => {
     `https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`,
     {
       headers: {
-        'User-Agent': 'Overseerr/1.0 (https://github.com/sct/overseerr)',
+        'User-Agent': 'OverseerrV2/1.0 (https://github.com/adsbikes95/overseerrV2)',
         Accept: 'application/json',
       },
       timeout: 10000,
