@@ -1,0 +1,13 @@
+diff --git a/node_modules/plex-api/lib/api.js b/node_modules/plex-api/lib/api.js
+index d150dee..67d7ba8 100644
+--- a/node_modules/plex-api/lib/api.js
++++ b/node_modules/plex-api/lib/api.js
+@@ -4,7 +4,7 @@ var url = require('url');
+ var request = require('request');
+ var xml2js = require('xml2js');
+ var headers = require('plex-api-headers');
+-var extend = require('util')._extend;
++var extend = Object.assign.bind(Object);
+ 
+ var uri = require('./uri');
+ 

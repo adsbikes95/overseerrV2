@@ -2,6 +2,10 @@
   padding-bottom: 150%;
 }
 
+.cardAspectCompact {
+  padding-bottom: 100%;
+}
+
 .overlayGradient {
   background: linear-gradient(
     180deg,

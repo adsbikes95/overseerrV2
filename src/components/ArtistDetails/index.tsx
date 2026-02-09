@@ -2,7 +2,6 @@ import Button from '@app/components/Common/Button';
 import CachedImage from '@app/components/Common/CachedImage';
 import LoadingSpinner from '@app/components/Common/LoadingSpinner';
 import PageTitle from '@app/components/Common/PageTitle';
-import ExternalLinkBlock from '@app/components/ExternalLinkBlock';
 import ManageSlideOver from '@app/components/ManageSlideOver';
 import RequestButton from '@app/components/RequestButton';
 import Slider from '@app/components/Slider';
@@ -33,19 +32,13 @@ const messages = defineMessages({
   topSongs: 'Top Songs',
   topAlbums: 'Top Albums',
   albums: 'Albums',
-  country: 'Country',
-  type: 'Type',
-  area: 'Area',
   manageartist: 'Manage Artist',
-  formed: 'Formed',
-  ended: 'Ended',
   members: 'Members',
   releases: 'Releases',
   popularTracks: 'Popular Tracks',
   biography: 'Biography',
   relatedArtists: 'Related Artists',
   externalLinks: 'External Links',
-  artistInfo: 'Artist Info',
   showMore: 'Show More',
   showLess: 'Show Less',
 });
@@ -285,8 +278,8 @@ const ArtistDetails = () => {
       </div>
 
       {/* Content Grid */}
-      <div className="media-overview">
-        <div className="media-overview-left space-y-8">
+      <div className="media-overview min-w-0 overflow-x-hidden">
+        <div className="media-overview-left min-w-0 space-y-8">
           {/* Biography Placeholder - could be populated with data from API */}
           <section>
             <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-white">
@@ -306,7 +299,7 @@ const ArtistDetails = () => {
 
           {/* Discography */}
           {allAlbums.length > 0 && (
-            <section>
+            <section className="min-w-0 overflow-hidden">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-2xl font-bold text-white">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
@@ -319,13 +312,13 @@ const ArtistDetails = () => {
                   {allAlbums.length === 1 ? 'release' : 'releases'}
                 </span>
               </div>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+              <div className="grid min-w-0 grid-cols-4 gap-1.5 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
                 {(showAllAlbums
                   ? allAlbums
                   : allAlbums.slice(0, ALBUMS_PER_PAGE)
                 ).map((rg) => (
                   <div key={`album-${rg.id}`} className="w-full">
-                    <AlbumTitleCard id={rg.id} mbid={rg.id} canExpand />
+                    <AlbumTitleCard id={rg.id} mbid={rg.id} canExpand compact />
                   </div>
                 ))}
               </div>
@@ -376,93 +369,22 @@ const ArtistDetails = () => {
 
           {/* Top Albums */}
           {topAlbums.length > 0 && (
-            <section>
+            <section className="min-w-0 overflow-hidden">
               <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-white">
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
                   <CircleStackIcon className="h-5 w-5 text-indigo-400" />
                 </span>
                 {intl.formatMessage(messages.topAlbums)}
               </h2>
-              <Slider
-                sliderKey="top-albums"
-                isLoading={false}
-                isEmpty={false}
-                items={topAlbums.slice(0, 12).map((rg) => (
-                  <AlbumTitleCard
-                    key={`top-album-${rg.id}`}
-                    id={rg.id}
-                    mbid={rg.id}
-                  />
+              <div className="grid min-w-0 grid-cols-4 gap-1.5 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+                {topAlbums.slice(0, 12).map((rg) => (
+                  <div key={`top-album-${rg.id}`} className="w-full">
+                    <AlbumTitleCard id={rg.id} mbid={rg.id} canExpand compact />
+                  </div>
                 ))}
-              />
+              </div>
             </section>
           )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="media-overview-right">
-          <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-6 shadow-xl backdrop-blur-sm">
-            <h3 className="mb-4 text-lg font-semibold text-white">
-              {intl.formatMessage(messages.artistInfo)}
-            </h3>
-
-            <div className="space-y-4">
-              {data.country && (
-                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                  <span className="text-gray-400">
-                    {intl.formatMessage(messages.country)}
-                  </span>
-                  <span className="font-medium text-white">{data.country}</span>
-                </div>
-              )}
-              {data.type && (
-                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                  <span className="text-gray-400">
-                    {intl.formatMessage(messages.type)}
-                  </span>
-                  <span className="font-medium text-white">{data.type}</span>
-                </div>
-              )}
-              {data.area && (
-                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                  <span className="text-gray-400">
-                    {intl.formatMessage(messages.area)}
-                  </span>
-                  <span className="font-medium text-white">
-                    {data.area.name}
-                  </span>
-                </div>
-              )}
-              {data.lifeSpan?.begin && (
-                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                  <span className="text-gray-400">
-                    {intl.formatMessage(messages.formed)}
-                  </span>
-                  <span className="font-medium text-white">
-                    {data.lifeSpan.begin}
-                  </span>
-                </div>
-              )}
-              {data.lifeSpan?.end && (
-                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-                  <span className="text-gray-400">
-                    {intl.formatMessage(messages.ended)}
-                  </span>
-                  <span className="font-medium text-white">
-                    {data.lifeSpan.end}
-                  </span>
-                </div>
-              )}
-
-              <div className="pt-2">
-                <ExternalLinkBlock
-                  mediaType="artist"
-                  mbid={data.id}
-                  serviceUrl={data.mediaInfo?.serviceUrl}
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 

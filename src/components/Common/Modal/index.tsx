@@ -4,19 +4,27 @@ import { Dialog, Transition } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import { Fragment, useRef } from 'react';
 
+type OkButtonType = 'primary' | 'danger' | 'warning' | 'success' | 'ghost';
+
 interface ModalProps {
   show?: boolean;
   onClose?: () => void;
+  onCancel?: () => void;
+  cancelText?: React.ReactNode;
   title?: string;
   subText?: React.ReactNode;
+  subTitle?: React.ReactNode;
   onOk?: () => void;
   okText?: React.ReactNode;
   okDisabled?: boolean;
-  okType?: 'primary' | 'danger' | 'warning' | 'success' | 'ghost';
+  okType?: OkButtonType;
+  okButtonType?: string;
   okButtonSize?: 'sm' | 'md' | 'lg';
   onSecondary?: () => void;
   secondaryText?: React.ReactNode;
   secondaryDisabled?: boolean;
+  secondaryButtonType?: string;
+  onSecondaryButton?: () => void;
   onTertiary?: () => void;
   tertiaryText?: React.ReactNode;
   tertiaryDisabled?: boolean;
@@ -28,21 +36,29 @@ interface ModalProps {
   className?: string;
   dialogClassName?: string;
   isDangerousAction?: boolean;
+  loading?: boolean;
+  backdrop?: string;
 }
 
 const Modal = ({
   show,
-  onClose,
+  onClose: onCloseProp,
+  onCancel,
+  cancelText,
   title,
   subText,
+  subTitle,
   onOk,
   okText,
   okDisabled,
-  okType = 'primary',
+  okType: okTypeProp,
+  okButtonType,
   okButtonSize = 'md',
   onSecondary,
   secondaryText,
   secondaryDisabled,
+  secondaryButtonType,
+  onSecondaryButton,
   onTertiary,
   tertiaryText,
   tertiaryDisabled,
@@ -55,7 +71,15 @@ const Modal = ({
   className,
   dialogClassName,
   isDangerousAction = false,
+  loading = false,
+  backdrop,
 }: ModalProps) => {
+  const onClose = onCloseProp ?? onCancel;
+  const okType = (okTypeProp ?? okButtonType ?? 'primary') as OkButtonType;
+  const effectiveSubText = subText ?? subTitle;
+  const effectiveSecondaryText = secondaryText ?? cancelText;
+  const effectiveOnSecondary = onSecondary ?? onSecondaryButton ?? onCancel;
+  const effectiveOkDisabled = okDisabled ?? loading;
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Implement focus trapping for accessibility
@@ -86,7 +110,11 @@ const Modal = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity" />
+          <div
+            className={`fixed inset-0 transition-opacity ${
+              backdrop ?? 'bg-gray-900 bg-opacity-75'
+            }`}
+          />
         </Transition.Child>
 
         <div
@@ -120,8 +148,10 @@ const Modal = ({
                         {title}
                       </Dialog.Title>
                     )}
-                    {subText && (
-                      <p className="mt-1 text-sm text-gray-400">{subText}</p>
+                    {effectiveSubText && (
+                      <p className="mt-1 text-sm text-gray-400">
+                        {effectiveSubText}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -155,18 +185,21 @@ const Modal = ({
                 )}
               </div>
 
-              {(onOk || onSecondary || onTertiary) && (
+              {(onOk || effectiveOnSecondary || onTertiary) && (
                 <div className="flex justify-end space-x-3 bg-gray-700 px-6 py-4">
-                  {onSecondary && (
+                  {effectiveOnSecondary && (
                     <Button
-                      buttonType={isDangerousAction ? 'ghost' : 'default'}
+                      buttonType={
+                        (secondaryButtonType as OkButtonType) ??
+                        (isDangerousAction ? 'ghost' : 'default')
+                      }
                       disabled={secondaryDisabled}
-                      onClick={onSecondary}
+                      onClick={effectiveOnSecondary}
                       className={`px-6 ${
                         isDangerousAction ? 'cursor-not-allowed' : ''
                       }`}
                     >
-                      {secondaryText || 'Cancel'}
+                      {effectiveSecondaryText || 'Cancel'}
                     </Button>
                   )}
                   {onTertiary && (
@@ -182,7 +215,7 @@ const Modal = ({
                   {onOk && (
                     <Button
                       buttonType={okType}
-                      disabled={okDisabled}
+                      disabled={effectiveOkDisabled}
                       onClick={onOk}
                       buttonSize={okButtonSize}
                       className="px-6"

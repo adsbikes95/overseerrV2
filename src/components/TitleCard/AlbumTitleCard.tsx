@@ -6,6 +6,7 @@ export interface AlbumTitleCardProps {
   id: string; // MusicBrainz ID
   mbid: string;
   canExpand?: boolean;
+  compact?: boolean;
 }
 
 interface AlbumDetails {
@@ -24,7 +25,12 @@ interface AlbumDetails {
   };
 }
 
-const AlbumTitleCard = ({ id, mbid, canExpand }: AlbumTitleCardProps) => {
+const AlbumTitleCard = ({
+  id,
+  mbid,
+  canExpand,
+  compact,
+}: AlbumTitleCardProps) => {
   const { ref, inView } = useInView({
     triggerOnce: true,
   });
@@ -34,7 +40,7 @@ const AlbumTitleCard = ({ id, mbid, canExpand }: AlbumTitleCardProps) => {
   if (!album && !error) {
     return (
       <div ref={ref}>
-        <TitleCard.Placeholder canExpand={canExpand} />
+        <TitleCard.Placeholder canExpand={canExpand} compact={compact} />
       </div>
     );
   }
@@ -59,6 +65,7 @@ const AlbumTitleCard = ({ id, mbid, canExpand }: AlbumTitleCardProps) => {
       year={album.firstReleaseDate}
       mediaType={'album'}
       canExpand={canExpand}
+      compact={compact}
       mbid={mbid}
     />
   );

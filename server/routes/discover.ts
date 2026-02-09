@@ -1,4 +1,5 @@
-import MusicBrainzAPI, {
+import {
+  getMusicBrainzAPI,
   type MusicBrainzArtist,
   type MusicBrainzReleaseGroup,
 } from '@server/api/musicbrainz';
@@ -868,7 +869,7 @@ discoverRoutes.get<Record<string, unknown>, WatchlistResponse>(
 );
 
 discoverRoutes.get('/artists', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -979,7 +980,7 @@ discoverRoutes.get('/artists', async (req, res, next) => {
 });
 
 discoverRoutes.get('/albums', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -1112,7 +1113,7 @@ discoverRoutes.get('/albums', async (req, res, next) => {
 });
 
 discoverRoutes.get('/albums/upcoming', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -1179,7 +1180,7 @@ discoverRoutes.get('/albums/upcoming', async (req, res, next) => {
 });
 
 discoverRoutes.get('/albums/popular', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -1268,7 +1269,7 @@ discoverRoutes.get('/albums/popular', async (req, res, next) => {
 });
 
 discoverRoutes.get('/artists/popular', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -1354,7 +1355,7 @@ discoverRoutes.get('/artists/popular', async (req, res, next) => {
 });
 
 discoverRoutes.get('/tracks/popular', async (req, res, next) => {
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -1422,7 +1423,7 @@ discoverRoutes.get('/tracks/popular', async (req, res, next) => {
 discoverRoutes.get<{ tag: string }>(
   '/artists/tag/:tag',
   async (req, res, next) => {
-    const musicBrainz = new MusicBrainzAPI();
+    const musicBrainz = getMusicBrainzAPI();
 
     try {
       const { page, limit, offset } = validatePagination(
@@ -1482,7 +1483,7 @@ discoverRoutes.get<{ tag: string }>(
 discoverRoutes.get<{ tag: string }>(
   '/albums/tag/:tag',
   async (req, res, next) => {
-    const musicBrainz = new MusicBrainzAPI();
+    const musicBrainz = getMusicBrainzAPI();
 
     try {
       const { page, limit, offset } = validatePagination(

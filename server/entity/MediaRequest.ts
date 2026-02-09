@@ -1,5 +1,5 @@
+import { getMusicBrainzAPI } from '@server/api/musicbrainz';
 import TheMovieDb from '@server/api/themoviedb';
-import MusicBrainzAPI from '@server/api/musicbrainz';
 import {
   MediaRequestStatus,
   MediaStatus,
@@ -191,7 +191,9 @@ export class MediaRequest {
           tmdbId: tmdbMediaData.id,
           tvdbId: requestBody.tvdbId ?? tmdbMediaData.external_ids.tvdb_id,
           status: !requestBody.is4k ? MediaStatus.PENDING : MediaStatus.UNKNOWN,
-          status4k: requestBody.is4k ? MediaStatus.PENDING : MediaStatus.UNKNOWN,
+          status4k: requestBody.is4k
+            ? MediaStatus.PENDING
+            : MediaStatus.UNKNOWN,
           mediaType: requestBody.mediaType,
         });
       }
@@ -235,7 +237,7 @@ export class MediaRequest {
       })
       .getMany();
 
-      if (existing && existing.length > 0) {
+    if (existing && existing.length > 0) {
       // If there is an existing movie request that isn't declined, don't allow a new one.
       if (
         requestBody.mediaType === MediaType.MOVIE &&
@@ -335,195 +337,195 @@ export class MediaRequest {
           profileId: requestBody.profileId,
           rootFolder: requestBody.rootFolder,
           tags: requestBody.tags,
-        isAutoRequest: options.isAutoRequest ?? false,
-      });
+          isAutoRequest: options.isAutoRequest ?? false,
+        });
 
         await requestRepository.save(request);
         return request;
       }
       case MediaType.TV: {
-      if (!tmdbMedia) {
-        throw new Error('TMDB media data not found for TV series');
-      }
-      const tmdbMediaShow = tmdbMedia as Awaited<
-        ReturnType<typeof tmdb.getTvShow>
-      >;
-      const requestedSeasons =
-        requestBody.seasons === 'all'
-          ? tmdbMediaShow.seasons
-              .filter((season) => season.season_number !== 0)
-              .map((season) => season.season_number)
-          : (requestBody.seasons as number[]);
-      let existingSeasons: number[] = [];
+        if (!tmdbMedia) {
+          throw new Error('TMDB media data not found for TV series');
+        }
+        const tmdbMediaShow = tmdbMedia as Awaited<
+          ReturnType<typeof tmdb.getTvShow>
+        >;
+        const requestedSeasons =
+          requestBody.seasons === 'all'
+            ? tmdbMediaShow.seasons
+                .filter((season) => season.season_number !== 0)
+                .map((season) => season.season_number)
+            : (requestBody.seasons as number[]);
+        let existingSeasons: number[] = [];
 
-      // We need to check existing requests on this title to make sure we don't double up on seasons that were
-      // already requested. In the case they were, we just throw out any duplicates but still approve the request.
-      // (Unless there are no seasons, in which case we abort)
-      if (mediaEntity.requests) {
-        existingSeasons = mediaEntity.requests
-          .filter(
-            (request) =>
-              request.is4k === requestBody.is4k &&
-              request.status !== MediaRequestStatus.DECLINED &&
-              request.status !== MediaRequestStatus.COMPLETED
-          )
-          .reduce((seasons, request) => {
-            const combinedSeasons = request.seasons.map(
-              (season) => season.seasonNumber
-            );
-
-            return [...seasons, ...combinedSeasons];
-          }, [] as number[]);
-      }
-
-      // We should also check seasons that are available/partially available but don't have existing requests
-      if (mediaEntity.seasons) {
-        existingSeasons = [
-          ...existingSeasons,
-          ...mediaEntity.seasons
+        // We need to check existing requests on this title to make sure we don't double up on seasons that were
+        // already requested. In the case they were, we just throw out any duplicates but still approve the request.
+        // (Unless there are no seasons, in which case we abort)
+        if (mediaEntity.requests) {
+          existingSeasons = mediaEntity.requests
             .filter(
-              (season) =>
-                season[requestBody.is4k ? 'status4k' : 'status'] !==
-                  MediaStatus.UNKNOWN &&
-                season[requestBody.is4k ? 'status4k' : 'status'] !==
-                  MediaStatus.DELETED
+              (request) =>
+                request.is4k === requestBody.is4k &&
+                request.status !== MediaRequestStatus.DECLINED &&
+                request.status !== MediaRequestStatus.COMPLETED
             )
-            .map((season) => season.seasonNumber),
-        ];
-      }
+            .reduce((seasons, request) => {
+              const combinedSeasons = request.seasons.map(
+                (season) => season.seasonNumber
+              );
 
-      const finalSeasons = requestedSeasons.filter(
-        (rs) => !existingSeasons.includes(rs)
-      );
+              return [...seasons, ...combinedSeasons];
+            }, [] as number[]);
+        }
 
-      if (finalSeasons.length === 0) {
-        throw new NoSeasonsAvailableError('No seasons available to request');
-      } else if (
-        quotas.tv.limit &&
-        finalSeasons.length > (quotas.tv.remaining ?? 0)
-      ) {
-        throw new QuotaRestrictedError('Series Quota exceeded.');
-      }
-
-      await mediaRepository.save(mediaEntity);
-
-      const request = new MediaRequest({
-        type: MediaType.TV,
-        media: mediaEntity,
-        requestedBy: requestUser,
-        // If the user is an admin or has the "auto approve" permission, automatically approve the request
-        status: user.hasPermission(
-          [
-            requestBody.is4k
-              ? Permission.AUTO_APPROVE_4K
-              : Permission.AUTO_APPROVE,
-            requestBody.is4k
-              ? Permission.AUTO_APPROVE_4K_TV
-              : Permission.AUTO_APPROVE_TV,
-            Permission.MANAGE_REQUESTS,
-          ],
-          { type: 'or' }
-        )
-          ? MediaRequestStatus.APPROVED
-          : MediaRequestStatus.PENDING,
-        modifiedBy: user.hasPermission(
-          [
-            requestBody.is4k
-              ? Permission.AUTO_APPROVE_4K
-              : Permission.AUTO_APPROVE,
-            requestBody.is4k
-              ? Permission.AUTO_APPROVE_4K_TV
-              : Permission.AUTO_APPROVE_TV,
-            Permission.MANAGE_REQUESTS,
-          ],
-          { type: 'or' }
-        )
-          ? user
-          : undefined,
-        is4k: requestBody.is4k,
-        serverId: requestBody.serverId,
-        profileId: requestBody.profileId,
-        rootFolder: requestBody.rootFolder,
-        languageProfileId: requestBody.languageProfileId,
-        tags: requestBody.tags,
-        seasons: finalSeasons.map(
-          (sn) =>
-            new SeasonRequest({
-              seasonNumber: sn,
-              status: user.hasPermission(
-                [
-                  requestBody.is4k
-                    ? Permission.AUTO_APPROVE_4K
-                    : Permission.AUTO_APPROVE,
-                  requestBody.is4k
-                    ? Permission.AUTO_APPROVE_4K_TV
-                    : Permission.AUTO_APPROVE_TV,
-                  Permission.MANAGE_REQUESTS,
-                ],
-                { type: 'or' }
+        // We should also check seasons that are available/partially available but don't have existing requests
+        if (mediaEntity.seasons) {
+          existingSeasons = [
+            ...existingSeasons,
+            ...mediaEntity.seasons
+              .filter(
+                (season) =>
+                  season[requestBody.is4k ? 'status4k' : 'status'] !==
+                    MediaStatus.UNKNOWN &&
+                  season[requestBody.is4k ? 'status4k' : 'status'] !==
+                    MediaStatus.DELETED
               )
-                ? MediaRequestStatus.APPROVED
-                : MediaRequestStatus.PENDING,
-            })
-        ),
-        isAutoRequest: options.isAutoRequest ?? false,
-      });
+              .map((season) => season.seasonNumber),
+          ];
+        }
 
-      await requestRepository.save(request);
-      return request;
-    }
-    case MediaType.MUSIC:
-    case MediaType.ARTIST:
-    case MediaType.ALBUM: {
-      if (!requestBody.musicBrainzId) {
-        throw new Error('MusicBrainz ID is required for music requests');
+        const finalSeasons = requestedSeasons.filter(
+          (rs) => !existingSeasons.includes(rs)
+        );
+
+        if (finalSeasons.length === 0) {
+          throw new NoSeasonsAvailableError('No seasons available to request');
+        } else if (
+          quotas.tv.limit &&
+          finalSeasons.length > (quotas.tv.remaining ?? 0)
+        ) {
+          throw new QuotaRestrictedError('Series Quota exceeded.');
+        }
+
+        await mediaRepository.save(mediaEntity);
+
+        const request = new MediaRequest({
+          type: MediaType.TV,
+          media: mediaEntity,
+          requestedBy: requestUser,
+          // If the user is an admin or has the "auto approve" permission, automatically approve the request
+          status: user.hasPermission(
+            [
+              requestBody.is4k
+                ? Permission.AUTO_APPROVE_4K
+                : Permission.AUTO_APPROVE,
+              requestBody.is4k
+                ? Permission.AUTO_APPROVE_4K_TV
+                : Permission.AUTO_APPROVE_TV,
+              Permission.MANAGE_REQUESTS,
+            ],
+            { type: 'or' }
+          )
+            ? MediaRequestStatus.APPROVED
+            : MediaRequestStatus.PENDING,
+          modifiedBy: user.hasPermission(
+            [
+              requestBody.is4k
+                ? Permission.AUTO_APPROVE_4K
+                : Permission.AUTO_APPROVE,
+              requestBody.is4k
+                ? Permission.AUTO_APPROVE_4K_TV
+                : Permission.AUTO_APPROVE_TV,
+              Permission.MANAGE_REQUESTS,
+            ],
+            { type: 'or' }
+          )
+            ? user
+            : undefined,
+          is4k: requestBody.is4k,
+          serverId: requestBody.serverId,
+          profileId: requestBody.profileId,
+          rootFolder: requestBody.rootFolder,
+          languageProfileId: requestBody.languageProfileId,
+          tags: requestBody.tags,
+          seasons: finalSeasons.map(
+            (sn) =>
+              new SeasonRequest({
+                seasonNumber: sn,
+                status: user.hasPermission(
+                  [
+                    requestBody.is4k
+                      ? Permission.AUTO_APPROVE_4K
+                      : Permission.AUTO_APPROVE,
+                    requestBody.is4k
+                      ? Permission.AUTO_APPROVE_4K_TV
+                      : Permission.AUTO_APPROVE_TV,
+                    Permission.MANAGE_REQUESTS,
+                  ],
+                  { type: 'or' }
+                )
+                  ? MediaRequestStatus.APPROVED
+                  : MediaRequestStatus.PENDING,
+              })
+          ),
+          isAutoRequest: options.isAutoRequest ?? false,
+        });
+
+        await requestRepository.save(request);
+        return request;
       }
+      case MediaType.MUSIC:
+      case MediaType.ARTIST:
+      case MediaType.ALBUM: {
+        if (!requestBody.musicBrainzId) {
+          throw new Error('MusicBrainz ID is required for music requests');
+        }
 
-      // Media should already exist from above, but ensure it's not null
-      if (!media) {
-        throw new Error('Media object is missing for music request');
+        // Media should already exist from above, but ensure it's not null
+        if (!media) {
+          throw new Error('Media object is missing for music request');
+        }
+        // TypeScript type narrowing - assert non-null after check
+        const mediaEntityForMusic: Media = media as Media;
+
+        await mediaRepository.save(mediaEntityForMusic);
+
+        const request = new MediaRequest({
+          type: requestBody.mediaType,
+          media: mediaEntityForMusic,
+          requestedBy: requestUser,
+          status: user.hasPermission(
+            [Permission.AUTO_APPROVE, Permission.MANAGE_REQUESTS],
+            { type: 'or' }
+          )
+            ? MediaRequestStatus.APPROVED
+            : MediaRequestStatus.PENDING,
+          modifiedBy: user.hasPermission(
+            [Permission.AUTO_APPROVE, Permission.MANAGE_REQUESTS],
+            { type: 'or' }
+          )
+            ? user
+            : undefined,
+          is4k: false, // Music doesn't have 4K
+          serverId: requestBody.serverId,
+          profileId: requestBody.profileId,
+          rootFolder: requestBody.rootFolder,
+          tags: requestBody.tags,
+          isAutoRequest: options.isAutoRequest ?? false,
+        });
+
+        await requestRepository.save(request);
+        return request;
       }
-      // TypeScript type narrowing - assert non-null after check
-      const mediaEntityForMusic: Media = media as Media;
-
-      await mediaRepository.save(mediaEntityForMusic);
-
-      const request = new MediaRequest({
-        type: requestBody.mediaType,
-        media: mediaEntityForMusic,
-        requestedBy: requestUser,
-        status: user.hasPermission(
-          [Permission.AUTO_APPROVE, Permission.MANAGE_REQUESTS],
-          { type: 'or' }
-        )
-          ? MediaRequestStatus.APPROVED
-          : MediaRequestStatus.PENDING,
-        modifiedBy: user.hasPermission(
-          [Permission.AUTO_APPROVE, Permission.MANAGE_REQUESTS],
-          { type: 'or' }
-        )
-          ? user
-          : undefined,
-        is4k: false, // Music doesn't have 4K
-        serverId: requestBody.serverId,
-        profileId: requestBody.profileId,
-        rootFolder: requestBody.rootFolder,
-        tags: requestBody.tags,
-        isAutoRequest: options.isAutoRequest ?? false,
-      });
-
-      await requestRepository.save(request);
-      return request;
-    }
-    default: {
-      // Exhaustiveness check - ensures all enum values are handled
-      // If we reach here, TypeScript knows all cases are covered
-      const exhaustiveCheck: never = requestBody.mediaType;
-      // This will never execute, but satisfies TypeScript's return type requirement
-      return Promise.reject(
-        new Error(`Unsupported media type: ${exhaustiveCheck}`)
-      ) as Promise<MediaRequest>;
-    }
+      default: {
+        // Exhaustiveness check - ensures all enum values are handled
+        // If we reach here, TypeScript knows all cases are covered
+        const exhaustiveCheck: never = requestBody.mediaType;
+        // This will never execute, but satisfies TypeScript's return type requirement
+        return Promise.reject(
+          new Error(`Unsupported media type: ${exhaustiveCheck}`)
+        ) as Promise<MediaRequest>;
+      }
     }
   }
 
@@ -725,7 +727,7 @@ export class MediaRequest {
     type: Notification
   ) {
     const tmdb = new TheMovieDb();
-    const musicBrainz = new MusicBrainzAPI();
+    const musicBrainz = getMusicBrainzAPI();
 
     try {
       let mediaType: string;
@@ -896,8 +898,7 @@ export class MediaRequest {
             notifySystem,
             notifyUser: notifyAdmin ? undefined : entity.requestedBy,
             event,
-            subject:
-              entity.type === MediaType.ARTIST ? 'Artist' : 'Album',
+            subject: entity.type === MediaType.ARTIST ? 'Artist' : 'Album',
             message: '',
           });
         }

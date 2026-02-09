@@ -7,7 +7,8 @@ import { defineMessages, useIntl } from 'react-intl';
 
 const messages = defineMessages({
   keyboardShortcuts: 'Keyboard Shortcuts',
-  shortcutsDescription: 'Quick actions you can perform using keyboard shortcuts',
+  shortcutsDescription:
+    'Quick actions you can perform using keyboard shortcuts',
   approveSelected: 'Approve Selected Requests',
   declineSelected: 'Decline Selected Requests',
   deleteSelected: 'Delete Selected Requests',
@@ -16,10 +17,10 @@ const messages = defineMessages({
 });
 
 interface KeyboardShortcutsProps {
-  shortcuts: Array<{
+  shortcuts: {
     keys: string[];
     description: string;
-  }>;
+  }[];
 }
 
 const KeyboardShortcuts = ({ shortcuts }: KeyboardShortcutsProps) => {
@@ -70,7 +71,7 @@ const KeyboardShortcuts = ({ shortcuts }: KeyboardShortcutsProps) => {
                     {shortcut.keys.map((key, keyIndex) => (
                       <kbd
                         key={keyIndex}
-                        className="rounded bg-gray-700 px-2 py-1 text-xs font-mono text-gray-200"
+                        className="rounded bg-gray-700 px-2 py-1 font-mono text-xs text-gray-200"
                       >
                         {key}
                       </kbd>

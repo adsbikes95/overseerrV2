@@ -23,8 +23,8 @@ import imageproxy from '@server/routes/imageproxy';
 import { getAppVersion } from '@server/utils/appVersion';
 import restartFlag from '@server/utils/restartFlag';
 import { getClientIp } from '@supercharge/request-ip';
-import { TypeormStore } from 'connect-typeorm/out';
 import compression from 'compression';
+import { TypeormStore } from 'connect-typeorm/out';
 import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
 import type { NextFunction, Request, Response } from 'express';
@@ -106,7 +106,7 @@ app
       const cacheManager = (await import('@server/lib/cache')).default;
       const allCaches = cacheManager.getAllCaches();
       // Trigger Redis connection for all caches
-      Object.values(allCaches).forEach((cache) => {
+      Object.values(allCaches).forEach(() => {
         // Connection happens asynchronously in Cache constructor
       });
       logger.info('Redis cache initialization started', { label: 'Cache' });

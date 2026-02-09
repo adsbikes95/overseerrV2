@@ -186,7 +186,8 @@ class MusicBrainzAPI extends ExternalAPI {
   }
 
   private isRetryableError(error: unknown): boolean {
-    const status = (error as { response?: { status?: number } }).response?.status;
+    const status = (error as { response?: { status?: number } }).response
+      ?.status;
     if (!status) {
       return false;
     }
@@ -526,6 +527,19 @@ class MusicBrainzAPI extends ExternalAPI {
       throw new Error('Failed to get artist albums');
     }
   }
+}
+
+let musicBrainzInstance: MusicBrainzAPI | null = null;
+
+/**
+ * Returns a shared MusicBrainz API instance to ensure rate limiting
+ * applies across all calls (MusicBrainz allows ~1 req/sec).
+ */
+export function getMusicBrainzAPI(): MusicBrainzAPI {
+  if (!musicBrainzInstance) {
+    musicBrainzInstance = new MusicBrainzAPI();
+  }
+  return musicBrainzInstance;
 }
 
 export default MusicBrainzAPI;

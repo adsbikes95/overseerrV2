@@ -29,6 +29,7 @@ const messages = defineMessages({
 interface AlbumDetails {
   id: string;
   title: string;
+  imageUrl?: string;
   primaryType?: string;
   secondaryTypes?: string[];
   firstReleaseDate?: string;
@@ -47,6 +48,8 @@ interface AlbumDetails {
   mediaInfo?: Media;
 }
 
+const PLACEHOLDER_IMAGE = '/images/overseerr_poster_not_found.png';
+
 const AlbumDetails = () => {
   const { hasPermission } = useUser();
   const router = useRouter();
@@ -54,6 +57,7 @@ const AlbumDetails = () => {
   const [showManager, setShowManager] = useState(
     router.query.manage == '1' ? true : false
   );
+  const [coverError, setCoverError] = useState(false);
 
   const {
     data,
@@ -74,6 +78,10 @@ const AlbumDetails = () => {
     setShowManager(router.query.manage == '1' ? true : false);
   }, [router.query.manage]);
 
+  useEffect(() => {
+    setCoverError(false);
+  }, [data?.id, data?.imageUrl]);
+
   if (!data && !error) {
     return <LoadingSpinner />;
   }
@@ -88,12 +96,7 @@ const AlbumDetails = () => {
     data.artistCredit?.[0]?.name || data.artistCredit?.[0]?.artist?.name || '';
 
   return (
-    <div
-      className="media-page"
-      style={{
-        height: 493,
-      }}
-    >
+    <div className="media-page">
       <PageTitle title={data.title} />
       <ManageSlideOver
         data={data}
@@ -111,12 +114,17 @@ const AlbumDetails = () => {
       <div className="media-header">
         <div className="media-poster">
           <CachedImage
-            src="/images/overseerr_poster_not_found.png"
-            alt=""
+            src={
+              coverError
+                ? PLACEHOLDER_IMAGE
+                : data.imageUrl || `/api/v1/music/album/${data.id}/cover`
+            }
+            alt={data.title}
             layout="responsive"
             width={600}
             height={900}
             priority
+            onError={() => setCoverError(true)}
           />
         </div>
         <div className="media-title">
@@ -164,18 +172,21 @@ const AlbumDetails = () => {
         </div>
       </div>
       <div className="media-overview">
-        <div className="media-overview-left">
+        <div className="media-overview-left min-w-0 overflow-hidden">
           <h2>{intl.formatMessage(messages.overview)}</h2>
-          <p>{intl.formatMessage(messages.overviewunavailable)}</p>
+          <p className="text-gray-400">
+            {artistName
+              ? `${data.title} by ${artistName}${
+                  data.firstReleaseDate
+                    ? `, released ${data.firstReleaseDate}`
+                    : ''
+                }.`
+              : intl.formatMessage(messages.overviewunavailable)}
+          </p>
           {data.tags && data.tags.length > 0 && (
-            <div className="mt-6">
-              {data.tags.map((tag) => (
-                <span
-                  key={`tag-${tag.name}`}
-                  className="mb-2 mr-2 inline-flex last:mr-0"
-                >
-                  <Tag>{tag.name}</Tag>
-                </span>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {data.tags.slice(0, 12).map((tag) => (
+                <Tag key={`tag-${tag.name}`}>{tag.name}</Tag>
               ))}
             </div>
           )}

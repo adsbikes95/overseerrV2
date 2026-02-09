@@ -20,7 +20,7 @@ export interface ServiceCommonServer {
 export interface ServiceCommonServerWithDetails {
   server: ServiceCommonServer;
   profiles: QualityProfile[];
-  metadataProfiles?: Array<{ id: number; name: string }>;
+  metadataProfiles?: { id: number; name: string }[];
   rootFolders: Partial<RootFolder>[];
   languageProfiles?: LanguageProfile[];
   tags: Tag[];

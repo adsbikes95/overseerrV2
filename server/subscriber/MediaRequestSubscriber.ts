@@ -1,4 +1,4 @@
-import MusicBrainzAPI from '@server/api/musicbrainz';
+import { getMusicBrainzAPI } from '@server/api/musicbrainz';
 import type {
   LidarrAlbumOptions,
   LidarrArtistOptions,
@@ -154,7 +154,7 @@ export class MediaRequestSubscriber
 
   private async notifyAvailableMusic(entity: MediaRequest) {
     if (entity.media.status === MediaStatus.AVAILABLE) {
-      const musicBrainz = new MusicBrainzAPI();
+      const musicBrainz = getMusicBrainzAPI();
 
       try {
         if (!entity.media.musicBrainzId) {
@@ -871,7 +871,7 @@ export class MediaRequestSubscriber
           apiKey: lidarrSettings.apiKey,
           url: LidarrAPI.buildUrl(lidarrSettings, '/api/v1'),
         });
-        const musicBrainz = new MusicBrainzAPI();
+        const musicBrainz = getMusicBrainzAPI();
 
         const media = await mediaRepository.findOne({
           where: { id: entity.media.id },
