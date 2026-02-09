@@ -6,20 +6,50 @@ import { Fragment, useRef } from 'react';
 
 interface ModalProps {
   show?: boolean;
+
+  /** Preferred close handler */
   onClose?: () => void;
+  /** @deprecated Use onClose */
+  onCancel?: () => void;
+
   title?: string;
+  /** Preferred subtitle prop */
   subText?: React.ReactNode;
+  /** @deprecated Use subText */
+  subTitle?: React.ReactNode;
+
   onOk?: () => void;
   okText?: React.ReactNode;
   okDisabled?: boolean;
+  /** @deprecated Use okDisabled */
+  loading?: boolean;
+
+  /** Preferred ok button type */
   okType?: 'primary' | 'danger' | 'warning' | 'success' | 'ghost';
+  /** @deprecated Use okType */
+  okButtonType?: 'primary' | 'danger' | 'warning' | 'success' | 'ghost';
+
   okButtonSize?: 'sm' | 'md' | 'lg';
+
+  /** Preferred secondary action */
   onSecondary?: () => void;
   secondaryText?: React.ReactNode;
   secondaryDisabled?: boolean;
+  /** @deprecated Prefer onSecondary/secondaryText */
+  cancelText?: React.ReactNode;
+  /** @deprecated (historical) */
+  secondaryButtonType?:
+    | 'default'
+    | 'primary'
+    | 'danger'
+    | 'warning'
+    | 'success'
+    | 'ghost';
+
   onTertiary?: () => void;
   tertiaryText?: React.ReactNode;
   tertiaryDisabled?: boolean;
+
   children?: React.ReactNode;
   description?: React.ReactNode;
   iconSvg?: React.ReactNode;
@@ -28,21 +58,30 @@ interface ModalProps {
   className?: string;
   dialogClassName?: string;
   isDangerousAction?: boolean;
+
+  /** @deprecated (legacy) */
+  backdrop?: string;
 }
 
 const Modal = ({
   show,
   onClose,
+  onCancel,
   title,
   subText,
+  subTitle,
   onOk,
   okText,
   okDisabled,
+  loading,
   okType = 'primary',
+  okButtonType,
   okButtonSize = 'md',
   onSecondary,
   secondaryText,
   secondaryDisabled,
+  cancelText,
+  // secondaryButtonType is deprecated (kept for compatibility)
   onTertiary,
   tertiaryText,
   tertiaryDisabled,
@@ -56,13 +95,21 @@ const Modal = ({
   dialogClassName,
   isDangerousAction = false,
 }: ModalProps) => {
+  const effectiveOnClose = onClose ?? onCancel;
+  const effectiveSubText = subText ?? subTitle;
+  const effectiveOkType = okButtonType ?? okType;
+  const effectiveOkDisabled = okDisabled ?? loading;
+  // Legacy callers often used onCancel/cancelText to mean "secondary action"
+  const effectiveOnSecondary = onSecondary ?? onCancel;
+  const effectiveSecondaryText = secondaryText ?? cancelText;
+
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Implement focus trapping for accessibility
   useFocusTrap(modalRef, !!show);
 
   // Implement keyboard navigation (Escape key handling)
-  useModalKeyboard(onClose, !!show);
+  useModalKeyboard(effectiveOnClose, !!show);
 
   return (
     <Transition appear show={show ?? false} as={Fragment}>
@@ -73,7 +120,7 @@ const Modal = ({
         }`}
         onClose={() => {
           if (backgroundClickable) {
-            onClose?.();
+            effectiveOnClose?.();
           }
         }}
       >
@@ -120,8 +167,10 @@ const Modal = ({
                         {title}
                       </Dialog.Title>
                     )}
-                    {subText && (
-                      <p className="mt-1 text-sm text-gray-400">{subText}</p>
+                    {effectiveSubText && (
+                      <p className="mt-1 text-sm text-gray-400">
+                        {effectiveSubText}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -129,7 +178,7 @@ const Modal = ({
                   <button
                     type="button"
                     className="rounded-md p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    onClick={onClose}
+                    onClick={effectiveOnClose}
                     aria-label="Close modal"
                   >
                     <XMarkIcon className="h-6 w-6" />
@@ -155,18 +204,18 @@ const Modal = ({
                 )}
               </div>
 
-              {(onOk || onSecondary || onTertiary) && (
+              {(onOk || effectiveOnSecondary || onTertiary) && (
                 <div className="flex justify-end space-x-3 bg-gray-700 px-6 py-4">
-                  {onSecondary && (
+                  {effectiveOnSecondary && (
                     <Button
                       buttonType={isDangerousAction ? 'ghost' : 'default'}
                       disabled={secondaryDisabled}
-                      onClick={onSecondary}
+                      onClick={effectiveOnSecondary}
                       className={`px-6 ${
                         isDangerousAction ? 'cursor-not-allowed' : ''
                       }`}
                     >
-                      {secondaryText || 'Cancel'}
+                      {effectiveSecondaryText || 'Cancel'}
                     </Button>
                   )}
                   {onTertiary && (
@@ -181,8 +230,8 @@ const Modal = ({
                   )}
                   {onOk && (
                     <Button
-                      buttonType={okType}
-                      disabled={okDisabled}
+                      buttonType={effectiveOkType}
+                      disabled={effectiveOkDisabled}
                       onClick={onOk}
                       buttonSize={okButtonSize}
                       className="px-6"
