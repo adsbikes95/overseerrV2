@@ -145,8 +145,15 @@ class PlexScanner
         'info'
       );
     } catch (e) {
+      const err =
+        e instanceof Error ? e : new Error(String(e ?? 'Unknown error'));
+      const errorMessage =
+        (err.message && err.message.trim()) ||
+        (typeof err.cause === 'string' ? err.cause : err.cause?.toString?.()) ||
+        String(e ?? 'Unknown error');
       this.log('Scan interrupted', 'error', {
-        errorMessage: e.message,
+        errorMessage: errorMessage || 'Unknown error',
+        ...(err.stack && { stack: err.stack }),
       });
     } finally {
       this.endRun(sessionId);
@@ -194,7 +201,11 @@ class PlexScanner
           sessionId,
         })
           .then(() => resolve())
-          .catch((e) => reject(new Error(e.message)));
+          .catch((e) =>
+            reject(
+              e instanceof Error ? e : new Error(String(e ?? 'Unknown error'))
+            )
+          );
       }, this.protectedUpdateRate)
     );
   }

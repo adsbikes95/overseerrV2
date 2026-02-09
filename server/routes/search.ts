@@ -1,4 +1,5 @@
-import MusicBrainzAPI, {
+import {
+  getMusicBrainzAPI,
   type MusicBrainzArtist,
   type MusicBrainzReleaseGroup,
 } from '@server/api/musicbrainz';
@@ -71,7 +72,7 @@ searchRoutes.get('/', async (req, res, next) => {
   try {
     // Music-only search: skip TMDB, query MusicBrainz only
     if (mediaType === 'artist' || mediaType === 'album') {
-      const musicBrainz = new MusicBrainzAPI();
+      const musicBrainz = getMusicBrainzAPI();
 
       if (mediaType === 'artist') {
         const artistLimit = 10;
@@ -279,7 +280,7 @@ searchRoutes.get('/', async (req, res, next) => {
       // Also search MusicBrainz in parallel (when not filtering to TMDB-only)
       if (!mediaType || mediaType === 'track') {
         try {
-          const musicBrainz = new MusicBrainzAPI();
+          const musicBrainz = getMusicBrainzAPI();
           const limit = 10; // Limit music results per page
           const offset = (page - 1) * limit;
           const shouldSearchArtists = !mediaType;

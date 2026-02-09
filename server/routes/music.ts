@@ -1,6 +1,7 @@
 import FanartAPI from '@server/api/fanart';
 import { getLastFmArtistInfoByMbid, pickLastFmImage } from '@server/api/lastfm';
-import MusicBrainzAPI from '@server/api/musicbrainz';
+import { getMusicBrainzAPI } from '@server/api/musicbrainz';
+import { getArtistImageByName as getSpotifyArtistImage } from '@server/api/spotify';
 import { MediaType } from '@server/constants/media';
 import { getRepository } from '@server/datasource';
 import Media from '@server/entity/Media';
@@ -120,7 +121,7 @@ musicRoutes.get('/artist/:mbid', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const artist = await musicBrainz.getArtist(mbid, [
@@ -169,7 +170,17 @@ musicRoutes.get('/artist/:mbid', async (req, res, next) => {
 
     // Fallback: MusicBrainz/Wikidata image when Fanart/Last.fm unavailable
     const musicBrainzImage = await resolveArtistImageUrl(artist.relations);
-    const imageUrl = fanartThumbnail || lastFmImage || musicBrainzImage;
+
+    // Optional: Spotify artist image (requires SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET)
+    let spotifyImage: string | undefined;
+    try {
+      spotifyImage = await getSpotifyArtistImage(artist.name);
+    } catch {
+      // Spotify is optional
+    }
+
+    const imageUrl =
+      fanartThumbnail || lastFmImage || spotifyImage || musicBrainzImage;
 
     return res.status(200).json({
       id: artist.id,
@@ -218,7 +229,7 @@ musicRoutes.get('/artist/:mbid/albums', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { page, limit, offset } = validatePagination(
@@ -285,7 +296,7 @@ musicRoutes.get('/album/:mbid', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const releaseGroup = await musicBrainz.getReleaseGroup(mbid, [
@@ -349,6 +360,21 @@ musicRoutes.get('/album/:mbid', async (req, res, next) => {
   }
 });
 
+musicRoutes.get('/album/:mbid/cover', async (req, res, next) => {
+  const { mbid } = req.params;
+
+  if (!isValidMBID(mbid)) {
+    return next({
+      status: 400,
+      message: 'Invalid MusicBrainz ID format.',
+    });
+  }
+
+  // Redirect to Cover Art Archive (no auth required, works for release-group IDs)
+  const coverArtUrl = `https://coverartarchive.org/release-group/${mbid}/front-500`;
+  return res.redirect(302, coverArtUrl);
+});
+
 musicRoutes.get('/track/:mbid', async (req, res, next) => {
   const { mbid } = req.params;
 
@@ -359,7 +385,7 @@ musicRoutes.get('/track/:mbid', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const recording = await musicBrainz.getRecording(mbid, [
@@ -402,7 +428,7 @@ musicRoutes.get('/artist/:mbid/similar', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     // Get artist with relations to find similar artists
@@ -507,7 +533,7 @@ musicRoutes.get('/artist/:mbid/top-tracks', async (req, res, next) => {
     });
   }
 
-  const musicBrainz = new MusicBrainzAPI();
+  const musicBrainz = getMusicBrainzAPI();
 
   try {
     const { limit, offset } = validatePagination(

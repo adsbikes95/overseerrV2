@@ -2,6 +2,10 @@
  * @type {import('next').NextConfig}
  */
 module.exports = {
+  experimental: {
+    // Increase threshold for pages with large i18n/settings payload (setup, login, 404)
+    largePageDataBytes: 256 * 1024,
+  },
   env: {
     commitTag: process.env.COMMIT_TAG || 'local',
   },

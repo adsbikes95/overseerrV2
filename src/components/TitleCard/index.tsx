@@ -52,6 +52,7 @@ interface TitleCardProps {
   mediaType: MediaType;
   status?: MediaStatus;
   canExpand?: boolean;
+  compact?: boolean;
   inProgress?: boolean;
   mbid?: string; // MusicBrainz ID for music types
 }
@@ -67,6 +68,7 @@ const TitleCard = React.memo(
     mediaType,
     inProgress = false,
     canExpand = false,
+    compact = false,
     mbid,
   }: TitleCardProps) => {
     const isTouch = useIsTouch();
@@ -154,7 +156,7 @@ const TitleCard = React.memo(
             showDetail
               ? 'scale-105 shadow-xl shadow-black/40 ring-gray-500'
               : 'scale-100 shadow-md shadow-black/20 ring-gray-700 hover:ring-gray-600'
-          } ${styles.cardAspect}`}
+          } ${compact ? styles.cardAspectCompact : styles.cardAspect}`}
           onMouseEnter={() => {
             if (!isTouch) {
               setShowDetail(true);
@@ -192,9 +194,11 @@ const TitleCard = React.memo(
                 image
                   ? image.startsWith('http')
                     ? image
-                    : image.startsWith('/')
+                    : image.startsWith('/images/')
                     ? image
-                    : `https://image.tmdb.org/t/p/w300_and_h450_face${image}`
+                    : `https://image.tmdb.org/t/p/w300_and_h450_face${
+                        image.startsWith('/') ? image : `/${image}`
+                      }`
                   : `/images/overseerr_poster_not_found_logo_top.png`
               }
               layout="fill"

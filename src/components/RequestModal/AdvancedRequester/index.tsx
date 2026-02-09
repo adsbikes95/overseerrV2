@@ -63,7 +63,6 @@ const AdvancedRequester = ({
   type,
   is4k = false,
   isAnime = false,
-  metadataProfile,
   defaultOverrides,
   requestUser,
   onChange,
@@ -89,9 +88,8 @@ const AdvancedRequester = ({
   const [selectedProfile, setSelectedProfile] = useState<number>(
     defaultOverrides?.profile ?? -1
   );
-  const [selectedMetadataProfile, setSelectedMetadataProfile] = useState<number>(
-    defaultOverrides?.metadataProfile ?? -1
-  );
+  const [selectedMetadataProfile, setSelectedMetadataProfile] =
+    useState<number>(defaultOverrides?.metadataProfile ?? -1);
   const [selectedFolder, setSelectedFolder] = useState<string>(
     defaultOverrides?.folder ?? ''
   );
@@ -205,8 +203,7 @@ const AdvancedRequester = ({
         : serverData.server.activeTags;
 
       const defaultMetadataProfile = serverData.metadataProfiles?.find(
-        (profile) =>
-          profile.id === serverData.server.activeMetadataProfileId
+        (profile) => profile.id === serverData.server.activeMetadataProfileId
       );
 
       const applyOverrides =
@@ -293,7 +290,8 @@ const AdvancedRequester = ({
       onChange({
         folder: selectedFolder !== '' ? selectedFolder : undefined,
         profile: selectedProfile !== -1 ? selectedProfile : undefined,
-        metadataProfile: selectedMetadataProfile !== -1 ? selectedMetadataProfile : undefined,
+        metadataProfile:
+          selectedMetadataProfile !== -1 ? selectedMetadataProfile : undefined,
         server: selectedServer ?? undefined,
         user: selectedUser ?? undefined,
         language: selectedLanguage !== -1 ? selectedLanguage : undefined,
@@ -321,12 +319,15 @@ const AdvancedRequester = ({
   if (
     (!data ||
       selectedServer === null ||
-      (data.filter((server) => type === 'music' || server.is4k === is4k).length < 2 &&
+      (data.filter((server) => type === 'music' || server.is4k === is4k)
+        .length < 2 &&
         (!serverData ||
           (serverData.profiles.length < 2 &&
             serverData.rootFolders.length < 2 &&
             (serverData.languageProfiles ?? []).length < 2 &&
-            (type === 'music' ? (serverData.metadataProfiles ?? []).length < 2 : true) &&
+            (type === 'music'
+              ? (serverData.metadataProfiles ?? []).length < 2
+              : true) &&
             !serverData.tags?.length)))) &&
     (!selectedUser || (filteredUserData ?? []).length < 2)
   ) {
@@ -339,9 +340,10 @@ const AdvancedRequester = ({
         {intl.formatMessage(messages.advancedoptions)}
       </div>
       <div className="rounded-md">
-            {!!data && selectedServer !== null && (
+        {!!data && selectedServer !== null && (
           <div className="flex flex-col md:flex-row">
-            {data.filter((server) => type === 'music' || server.is4k === is4k).length > 1 && (
+            {data.filter((server) => type === 'music' || server.is4k === is4k)
+              .length > 1 && (
               <div className="mb-3 w-full flex-shrink-0 flex-grow last:pr-0 md:w-1/4 md:pr-4">
                 <label htmlFor="server">
                   {intl.formatMessage(messages.destinationserver)}
@@ -355,7 +357,9 @@ const AdvancedRequester = ({
                   className="border-gray-700 bg-gray-800"
                 >
                   {data
-                    .filter((server) => type === 'music' || server.is4k === is4k)
+                    .filter(
+                      (server) => type === 'music' || server.is4k === is4k
+                    )
                     .map((server) => (
                       <option
                         key={`server-list-${server.id}`}
@@ -448,7 +452,8 @@ const AdvancedRequester = ({
                           key={`metadata-profile-list${profile.id}`}
                           value={profile.id}
                         >
-                          {serverData.server.activeMetadataProfileId === profile.id
+                          {serverData.server.activeMetadataProfileId ===
+                          profile.id
                             ? intl.formatMessage(messages.default, {
                                 name: profile.name,
                               })
