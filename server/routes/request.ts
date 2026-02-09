@@ -766,10 +766,11 @@ requestRoutes.delete('/:requestId', async (req, res, next) => {
       relations: { requestedBy: true, modifiedBy: true },
     });
 
+    // Non-admins can only delete their own PENDING requests
     if (
       !req.user?.hasPermission(Permission.MANAGE_REQUESTS) &&
-      request.requestedBy.id !== req.user?.id &&
-      request.status !== 1
+      (request.requestedBy.id !== req.user?.id ||
+        request.status !== MediaRequestStatus.PENDING)
     ) {
       return next({
         status: 401,
