@@ -6,7 +6,8 @@ import type {
   PermissionCheckOptions,
 } from '@server/lib/permissions';
 import { getSettings } from '@server/lib/settings';
-import { createHash } from 'crypto';
+import logger from '@server/logger';
+import { createHash, timingSafeEqual } from 'crypto';
 
 export const checkUser: Middleware = async (req, _res, next) => {
   const settings = getSettings();
@@ -15,7 +16,15 @@ export const checkUser: Middleware = async (req, _res, next) => {
   const apiKeyHeader = req.header('X-API-Key');
 
   // Legacy single API key behavior (kept for backward compatibility)
-  if (apiKeyHeader && apiKeyHeader === settings.main.apiKey) {
+  // Use constant-time comparison to prevent timing attacks
+  if (
+    apiKeyHeader &&
+    apiKeyHeader.length === settings.main.apiKey.length &&
+    timingSafeEqual(
+      Buffer.from(apiKeyHeader),
+      Buffer.from(settings.main.apiKey)
+    )
+  ) {
     const userRepository = getRepository(User);
 
     let userId = 1; // Work on original administrator account
@@ -23,6 +32,12 @@ export const checkUser: Middleware = async (req, _res, next) => {
     // If a User ID is provided, we will act on that user's behalf
     if (req.header('X-API-User')) {
       userId = Number(req.header('X-API-User'));
+
+      logger.info(`Legacy API key used to impersonate user ${userId}`, {
+        label: 'Auth',
+        ip: req.ip,
+        impersonatedUserId: userId,
+      });
     }
 
     user = await userRepository.findOne({ where: { id: userId } });

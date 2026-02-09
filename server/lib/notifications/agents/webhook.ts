@@ -3,6 +3,7 @@ import { MediaStatus } from '@server/constants/media';
 import type { NotificationAgentWebhook } from '@server/lib/settings';
 import { getSettings } from '@server/lib/settings';
 import logger from '@server/logger';
+import { isSafeUrl } from '@server/utils/validation';
 import axios from 'axios';
 import { get } from 'lodash';
 import { hasNotificationType, Notification } from '..';
@@ -178,6 +179,12 @@ class WebhookAgent
     });
 
     try {
+      if (!isSafeUrl(settings.options.webhookUrl)) {
+        throw new Error(
+          'Webhook URL failed SSRF validation: ' + settings.options.webhookUrl
+        );
+      }
+
       await axios.post(
         settings.options.webhookUrl,
         this.buildPayload(type, payload),

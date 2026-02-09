@@ -2,6 +2,7 @@ import RadarrAPI from '@server/api/servarr/radarr';
 import type { RadarrSettings } from '@server/lib/settings';
 import { getSettings } from '@server/lib/settings';
 import logger from '@server/logger';
+import { isSafeUrl } from '@server/utils/validation';
 import { Router } from 'express';
 
 const radarrRoutes = Router();
@@ -42,9 +43,18 @@ radarrRoutes.post<
   RadarrSettings & { tagLabel?: string }
 >('/test', async (req, res, next) => {
   try {
+    const builtUrl = RadarrAPI.buildUrl(req.body, '/api/v3');
+
+    if (!isSafeUrl(builtUrl)) {
+      return next({
+        status: 400,
+        message: 'Provided URL is not allowed (blocked by SSRF protection).',
+      });
+    }
+
     const radarr = new RadarrAPI({
       apiKey: req.body.apiKey,
-      url: RadarrAPI.buildUrl(req.body, '/api/v3'),
+      url: builtUrl,
     });
 
     const urlBase = await radarr

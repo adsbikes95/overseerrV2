@@ -305,7 +305,7 @@ class Settings {
         apiKey: '',
         applicationTitle: 'Overseerr',
         applicationUrl: '',
-        csrfProtection: false,
+        csrfProtection: true,
         cacheImages: false,
         defaultPermissions: Permission.REQUEST,
         defaultQuotas: {

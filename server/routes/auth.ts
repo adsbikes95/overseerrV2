@@ -167,9 +167,18 @@ authRoutes.post('/plex', async (req, res, next) => {
       }
     }
 
-    // Set logged in session
+    // Set logged in session (regenerate to prevent session fixation)
     if (req.session) {
-      req.session.userId = user.id;
+      await new Promise<void>((resolve, reject) => {
+        req.session.regenerate((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            req.session.userId = user!.id;
+            resolve();
+          }
+        });
+      });
     }
 
     return res.status(200).json(user?.filter() ?? {});
@@ -288,9 +297,18 @@ authRoutes.post('/local', async (req, res, next) => {
       });
     }
 
-    // Set logged in session
+    // Set logged in session (regenerate to prevent session fixation)
     if (user && req.session) {
-      req.session.userId = user.id;
+      await new Promise<void>((resolve, reject) => {
+        req.session.regenerate((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            req.session.userId = user!.id;
+            resolve();
+          }
+        });
+      });
     }
 
     return res.status(200).json(user?.filter() ?? {});
@@ -342,7 +360,7 @@ authRoutes.post('/reset-password', async (req, res, next) => {
 
   if (user) {
     await user.resetPassword();
-    userRepository.save(user);
+    await userRepository.save(user);
     logger.info('Successfully sent password reset link', {
       label: 'API',
       ip: req.ip,
@@ -408,7 +426,8 @@ authRoutes.post('/reset-password/:guid', async (req, res, next) => {
 
   await user.setPassword(req.body.password);
   user.recoveryLinkExpirationDate = null;
-  userRepository.save(user);
+  user.resetPasswordGuid = undefined;
+  await userRepository.save(user);
   logger.info('Successfully reset password', {
     label: 'API',
     ip: req.ip,

@@ -768,11 +768,10 @@ requestRoutes.delete('/:requestId', async (req, res, next) => {
 
     if (
       !req.user?.hasPermission(Permission.MANAGE_REQUESTS) &&
-      request.requestedBy.id !== req.user?.id &&
-      request.status !== 1
+      request.requestedBy.id !== req.user?.id
     ) {
       return next({
-        status: 401,
+        status: 403,
         message: 'You do not have permission to delete this request.',
       });
     }

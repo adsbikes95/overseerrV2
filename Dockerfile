@@ -43,6 +43,12 @@ RUN apk add --no-cache tzdata tini ca-certificates && rm -rf /tmp/*
 # copy from build image
 COPY --from=BUILD_IMAGE /app ./
 
+# Ensure the config directory exists and is writable by the node user
+RUN mkdir -p config && chown -R node:node config
+
+# Run as non-root user for security
+USER node
+
 ENTRYPOINT [ "/sbin/tini", "--" ]
 CMD [ "yarn", "start" ]
 

@@ -23,8 +23,8 @@ import imageproxy from '@server/routes/imageproxy';
 import { getAppVersion } from '@server/utils/appVersion';
 import restartFlag from '@server/utils/restartFlag';
 import { getClientIp } from '@supercharge/request-ip';
-import { TypeormStore } from 'connect-typeorm/out';
 import compression from 'compression';
+import { TypeormStore } from 'connect-typeorm/out';
 import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
 import type { NextFunction, Request, Response } from 'express';
@@ -32,6 +32,7 @@ import express from 'express';
 import * as OpenApiValidator from 'express-openapi-validator';
 import type { Store } from 'express-session';
 import session from 'express-session';
+import helmet from 'helmet';
 import next from 'next';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
@@ -106,7 +107,7 @@ app
       const cacheManager = (await import('@server/lib/cache')).default;
       const allCaches = cacheManager.getAllCaches();
       // Trigger Redis connection for all caches
-      Object.values(allCaches).forEach((cache) => {
+      Object.values(allCaches).forEach(() => {
         // Connection happens asynchronously in Cache constructor
       });
       logger.info('Redis cache initialization started', { label: 'Cache' });
@@ -116,6 +117,12 @@ app
     if (settings.main.trustProxy) {
       server.enable('trust proxy');
     }
+    server.use(
+      helmet({
+        contentSecurityPolicy: false, // Disabled for Next.js compatibility
+        crossOriginEmbedderPolicy: false, // Disabled for image proxy compatibility
+      })
+    );
     server.use(cookieParser());
     server.use(express.json());
     server.use(express.urlencoded({ extended: true }));

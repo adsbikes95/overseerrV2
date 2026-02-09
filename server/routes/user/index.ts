@@ -186,6 +186,18 @@ router.post<
 router.get<{ userId: number }>(
   '/:userId/pushSubscriptions',
   async (req, res, next) => {
+    // Only allow users to view their own subscriptions, or admins
+    if (
+      Number(req.params.userId) !== req.user?.id &&
+      !req.user?.hasPermission(Permission.ADMIN)
+    ) {
+      return next({
+        status: 403,
+        message:
+          "You do not have permission to view this user's push subscriptions.",
+      });
+    }
+
     try {
       const userPushSubRepository = getRepository(UserPushSubscription);
 
@@ -204,6 +216,18 @@ router.get<{ userId: number }>(
 router.get<{ userId: number; endpoint: string }>(
   '/:userId/pushSubscription/:endpoint',
   async (req, res, next) => {
+    // Only allow users to view their own subscriptions, or admins
+    if (
+      Number(req.params.userId) !== req.user?.id &&
+      !req.user?.hasPermission(Permission.ADMIN)
+    ) {
+      return next({
+        status: 403,
+        message:
+          "You do not have permission to view this user's push subscriptions.",
+      });
+    }
+
     try {
       const userPushSubRepository = getRepository(UserPushSubscription);
 
@@ -227,6 +251,18 @@ router.get<{ userId: number; endpoint: string }>(
 router.delete<{ userId: number; endpoint: string }>(
   '/:userId/pushSubscription/:endpoint',
   async (req, res, next) => {
+    // Only allow users to delete their own subscriptions, or admins
+    if (
+      Number(req.params.userId) !== req.user?.id &&
+      !req.user?.hasPermission(Permission.ADMIN)
+    ) {
+      return next({
+        status: 403,
+        message:
+          "You do not have permission to delete this user's push subscriptions.",
+      });
+    }
+
     try {
       const userPushSubRepository = getRepository(UserPushSubscription);
 

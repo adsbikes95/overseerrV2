@@ -2,6 +2,7 @@ import SonarrAPI from '@server/api/servarr/sonarr';
 import type { SonarrSettings } from '@server/lib/settings';
 import { getSettings } from '@server/lib/settings';
 import logger from '@server/logger';
+import { isSafeUrl } from '@server/utils/validation';
 import { Router } from 'express';
 
 const sonarrRoutes = Router();
@@ -38,9 +39,18 @@ sonarrRoutes.post('/', (req, res) => {
 
 sonarrRoutes.post('/test', async (req, res, next) => {
   try {
+    const builtUrl = SonarrAPI.buildUrl(req.body, '/api/v3');
+
+    if (!isSafeUrl(builtUrl)) {
+      return next({
+        status: 400,
+        message: 'Provided URL is not allowed (blocked by SSRF protection).',
+      });
+    }
+
     const sonarr = new SonarrAPI({
       apiKey: req.body.apiKey,
-      url: SonarrAPI.buildUrl(req.body, '/api/v3'),
+      url: builtUrl,
     });
 
     const urlBase = await sonarr

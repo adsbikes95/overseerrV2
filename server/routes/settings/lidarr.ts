@@ -2,6 +2,7 @@ import LidarrAPI from '@server/api/servarr/lidarr';
 import type { LidarrSettings } from '@server/lib/settings';
 import { getSettings } from '@server/lib/settings';
 import logger from '@server/logger';
+import { isSafeUrl } from '@server/utils/validation';
 import { Router } from 'express';
 
 const lidarrRoutes = Router();
@@ -61,9 +62,18 @@ lidarrRoutes.post<
   LidarrSettings & { tagLabel?: string }
 >('/test', async (req, res, next) => {
   try {
+    const builtUrl = LidarrAPI.buildUrl(req.body, '/api/v1');
+
+    if (!isSafeUrl(builtUrl)) {
+      return next({
+        status: 400,
+        message: 'Provided URL is not allowed (blocked by SSRF protection).',
+      });
+    }
+
     const lidarr = new LidarrAPI({
       apiKey: req.body.apiKey,
-      url: LidarrAPI.buildUrl(req.body, '/api/v1'),
+      url: builtUrl,
     });
 
     const urlBase = await lidarr
