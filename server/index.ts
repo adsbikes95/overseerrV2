@@ -32,6 +32,7 @@ import express from 'express';
 import * as OpenApiValidator from 'express-openapi-validator';
 import type { Store } from 'express-session';
 import session from 'express-session';
+import helmet from 'helmet';
 import next from 'next';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
@@ -116,24 +117,26 @@ app
     if (settings.main.trustProxy) {
       server.enable('trust proxy');
     }
+    server.disable('x-powered-by');
     server.use(cookieParser());
     server.use(express.json());
     server.use(express.urlencoded({ extended: true }));
+    server.use(
+      helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false,
+      })
+    );
     server.use(compression());
     server.use((req, _res, next) => {
-      try {
-        const descriptor = Object.getOwnPropertyDescriptor(req, 'ip');
-        if (descriptor?.writable === true) {
-          req.ip = getClientIp(req) ?? '';
+      if (!req.ip) {
+        const ip = getClientIp(req);
+        if (ip) {
+          Object.defineProperty(req, 'ip', { value: ip, configurable: true });
         }
-      } catch (e) {
-        logger.error('Failed to attach the ip to the request', {
-          label: 'Middleware',
-          message: e.message,
-        });
-      } finally {
-        next();
       }
+
+      next();
     });
     if (settings.main.csrfProtection) {
       server.use(
