@@ -127,6 +127,10 @@ class PlexOAuth {
   }
 
   private async pinPoll(): Promise<string> {
+    const pollIntervalMs = 1000;
+    const maxPollDurationMs = 3 * 60 * 1000; // 3 minutes
+    const startTime = Date.now();
+
     const executePoll = async (
       resolve: (authToken: string) => void,
       reject: (e: Error) => void
@@ -134,6 +138,16 @@ class PlexOAuth {
       try {
         if (!this.pin) {
           throw new Error('Unable to poll when pin is not initialized.');
+        }
+
+        if (Date.now() - startTime > maxPollDurationMs) {
+          this.closePopup();
+          reject(
+            new Error(
+              'Login timed out. Please try again and complete sign-in in the popup.'
+            )
+          );
+          return;
         }
 
         const response = await axios.get(
@@ -145,10 +159,9 @@ class PlexOAuth {
           this.authToken = response.data.authToken as string;
           this.closePopup();
           resolve(this.authToken);
-        } else if (!response.data?.authToken && !this.popup?.closed) {
-          setTimeout(executePoll, 1000, resolve, reject);
         } else {
-          reject(new Error('Popup closed without completing login'));
+          // Keep polling; do not use popup.closed (unreliable after cross-origin navigation in Brave, etc.)
+          setTimeout(executePoll, pollIntervalMs, resolve, reject);
         }
       } catch (e) {
         this.closePopup();

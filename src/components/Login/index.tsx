@@ -36,15 +36,19 @@ const Login = () => {
   useEffect(() => {
     const login = async () => {
       setProcessing(true);
+      setError('');
       try {
         const response = await axios.post('/api/v1/auth/plex', { authToken });
 
         if (response.data?.id) {
-          revalidate();
+          await revalidate(response.data);
+        } else {
+          await revalidate();
         }
       } catch (e) {
-        setError(e.response.data.message);
+        setError(e.response?.data?.message ?? 'Something went wrong.');
         setAuthToken(undefined);
+      } finally {
         setProcessing(false);
       }
     };

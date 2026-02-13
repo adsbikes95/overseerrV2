@@ -194,7 +194,7 @@ const TitleCard = React.memo(
                 image
                   ? image.startsWith('http')
                     ? image
-                    : image.startsWith('/images/')
+                    : image.startsWith('/images/') || image.startsWith('/api/')
                     ? image
                     : `https://image.tmdb.org/t/p/w300_and_h450_face${
                         image.startsWith('/') ? image : `/${image}`

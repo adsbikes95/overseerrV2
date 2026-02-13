@@ -121,6 +121,7 @@ app
     server.use(cookieParser());
     server.use(express.json());
     server.use(express.urlencoded({ extended: true }));
+    // CSP/COEP disabled for Next.js and image proxy compatibility; do not re-enable without testing
     server.use(
       helmet({
         contentSecurityPolicy: false,
@@ -132,7 +133,17 @@ app
       if (!req.ip) {
         const ip = getClientIp(req);
         if (ip) {
-          Object.defineProperty(req, 'ip', { value: ip, configurable: true });
+          try {
+            Object.defineProperty(req, 'ip', {
+              value: ip,
+              configurable: true,
+            });
+          } catch (e) {
+            logger.warn('Could not attach request IP', {
+              label: 'Middleware',
+              message: e instanceof Error ? e.message : String(e),
+            });
+          }
         }
       }
 

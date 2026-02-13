@@ -27,10 +27,11 @@ import { defineMessages, FormattedRelativeTime, useIntl } from 'react-intl';
 import { useToasts } from 'react-toast-notifications';
 import useSWR, { mutate } from 'swr';
 
-// Music detail interfaces
+// Music detail interfaces (match API response for artist/album)
 interface ArtistDetails {
   id: string;
   name: string;
+  imageUrl?: string;
   disambiguation?: string;
   country?: string;
   type?: string;
@@ -45,6 +46,8 @@ interface ArtistDetails {
 interface AlbumDetails {
   id: string;
   title: string;
+  imageUrl?: string;
+  coverArtUrl?: string;
   disambiguation?: string;
   firstReleaseDate?: string;
   primaryType?: string;
@@ -365,9 +368,7 @@ const RequestItem = ({
   const { user, hasPermission } = useUser();
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const requestType = request.type === 'music' ? 'artist' : request.type;
-
-  // Determine URL based on request type
+  const requestType = request.type;
   const isMusicRequest = requestType === 'artist' || requestType === 'album';
   const url = isMusicRequest
     ? requestType === 'artist'
@@ -459,7 +460,16 @@ const RequestItem = ({
         show={showEditModal}
         tmdbId={isMusicRequest ? undefined : request.media.tmdbId}
         mbid={isMusicRequest ? request.media.musicBrainzId : undefined}
-        type={requestType}
+        type={
+          requestType === 'music'
+            ? 'artist'
+            : (requestType as
+                | 'movie'
+                | 'tv'
+                | 'collection'
+                | 'artist'
+                | 'album')
+        }
         is4k={request.is4k}
         editRequest={request}
         onCancel={() => setShowEditModal(false)}
@@ -519,7 +529,11 @@ const RequestItem = ({
                 <CachedImage
                   src={
                     isMusicRequest
-                      ? '/images/overseerr_poster_not_found.png'
+                      ? 'imageUrl' in title && title.imageUrl
+                        ? title.imageUrl
+                        : 'coverArtUrl' in title && title.coverArtUrl
+                        ? title.coverArtUrl
+                        : '/images/overseerr_poster_not_found.png'
                       : 'posterPath' in title && title.posterPath
                       ? `https://image.tmdb.org/t/p/w600_and_h900_bestv2${title.posterPath}`
                       : '/images/overseerr_poster_not_found.png'

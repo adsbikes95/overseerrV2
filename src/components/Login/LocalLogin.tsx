@@ -1,6 +1,7 @@
 import Button from '@app/components/Common/Button';
 import SensitiveInput from '@app/components/Common/SensitiveInput';
 import useSettings from '@app/hooks/useSettings';
+import type { User } from '@app/hooks/useUser';
 import {
   ArrowLeftOnRectangleIcon,
   LifebuoyIcon,
@@ -24,7 +25,7 @@ const messages = defineMessages({
 });
 
 interface LocalLoginProps {
-  revalidate: () => void;
+  revalidate: (data?: User) => Promise<User | undefined>;
 }
 
 const LocalLogin = ({ revalidate }: LocalLoginProps) => {
@@ -53,15 +54,24 @@ const LocalLogin = ({ revalidate }: LocalLoginProps) => {
       }}
       validationSchema={LoginSchema}
       onSubmit={async (values) => {
+        setLoginError(null);
         try {
-          await axios.post('/api/v1/auth/local', {
+          const response = await axios.post('/api/v1/auth/local', {
             email: values.email,
             password: values.password,
           });
+          // Update SWR cache with logged-in user so redirect happens immediately
+          if (response.data?.id) {
+            await revalidate(response.data);
+          } else {
+            await revalidate();
+          }
         } catch (e) {
-          setLoginError(intl.formatMessage(messages.loginerror));
-        } finally {
-          revalidate();
+          const message =
+            e.response?.data?.message ||
+            intl.formatMessage(messages.loginerror);
+          setLoginError(message);
+          await revalidate();
         }
       }}
     >

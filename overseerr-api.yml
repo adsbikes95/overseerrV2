@@ -6669,6 +6669,28 @@ paths:
                       type: object
                   mediaInfo:
                     $ref: '#/components/schemas/MediaInfo'
+  /music/album/{mbid}/cover:
+    get:
+      summary: Get album cover image
+      description: |
+        Redirects to the Cover Art Archive image for the album (release group).
+        Use the album MBID (MusicBrainz ID) in the path.
+      tags:
+        - music
+      parameters:
+        - in: path
+          name: mbid
+          required: true
+          schema:
+            type: string
+            example: '1b022e01-4da6-387b-8658-8678046e4cef'
+      responses:
+        '302':
+          description: Redirect to cover image URL
+        '400':
+          description: Invalid MusicBrainz ID format
+        '404':
+          description: Album or cover not found
   /person/{personId}:
     get:
       summary: Get person details

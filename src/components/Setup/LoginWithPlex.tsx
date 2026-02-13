@@ -35,9 +35,10 @@ const LoginWithPlex = ({ onComplete }: LoginWithPlexProps) => {
         const response = await axios.post('/api/v1/auth/plex', { authToken });
 
         if (response.data?.id) {
-          revalidate();
+          await revalidate(response.data);
         } else {
           setError('Unable to authenticate. Please try again.');
+          await revalidate();
         }
       } catch (e) {
         const message =
@@ -45,6 +46,7 @@ const LoginWithPlex = ({ onComplete }: LoginWithPlexProps) => {
           e.message ||
           'Unable to authenticate. Please try again.';
         setError(message);
+        await revalidate();
       } finally {
         setIsProcessing(false);
       }

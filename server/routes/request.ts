@@ -250,6 +250,12 @@ requestRoutes.get('/count', async (_req, res, next) => {
       })
       .getCount();
 
+    const musicCount = await query
+      .where('request.type IN (:...musicTypes)', {
+        musicTypes: [MediaType.ARTIST, MediaType.ALBUM],
+      })
+      .getCount();
+
     const pendingCount = await query
       .where('request.status = :requestStatus', {
         requestStatus: MediaRequestStatus.PENDING,
@@ -296,6 +302,7 @@ requestRoutes.get('/count', async (_req, res, next) => {
       total: totalCount,
       movie: movieCount,
       tv: tvCount,
+      music: musicCount,
       pending: pendingCount,
       approved: approvedCount,
       declined: declinedCount,
@@ -766,14 +773,14 @@ requestRoutes.delete('/:requestId', async (req, res, next) => {
       relations: { requestedBy: true, modifiedBy: true },
     });
 
-    // Non-admins can only delete their own PENDING requests
+    // Non-admins can only delete their own PENDING requests (route is behind isAuthenticated() at router level)
     if (
       !req.user?.hasPermission(Permission.MANAGE_REQUESTS) &&
       (request.requestedBy.id !== req.user?.id ||
         request.status !== MediaRequestStatus.PENDING)
     ) {
       return next({
-        status: 401,
+        status: 403,
         message: 'You do not have permission to delete this request.',
       });
     }
